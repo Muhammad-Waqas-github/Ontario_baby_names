@@ -1,25 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
-import Chart from 'chart.js/auto';
-import 'chartjs-adapter-date-fns';
+import React, { useState, useEffect } from "react";
+import Papa from "papaparse";
+import Chart from "chart.js/auto";
+import "chartjs-adapter-date-fns";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Switch from "@mui/material/Switch";
 
 function App() {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [parsedData, setParsedData] = useState([]);
   const [chart, setChart] = useState(null);
   const [selectedNames, setSelectedNames] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState('male');
+  const [selectedDataset, setSelectedDataset] = useState("male");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let dataset = selectedDataset === 'male' ? 'male_names.csv' : 'female_names.csv';
-        const response = await fetch(dataset);
+        let dataset =
+          selectedDataset === "male" ? "male_names.csv" : "female_names.csv";
+        const response = await fetch(`Ontario_baby_names/${dataset}`);
         const csvData = await response.text();
         const parsed = Papa.parse(csvData, { header: true }).data;
         setParsedData(parsed);
       } catch (error) {
-        console.error('Error fetching or parsing data:', error);
+        console.error("Error fetching or parsing data:", error);
       }
     };
 
@@ -32,22 +36,22 @@ function App() {
     }
 
     if (selectedNames.includes(name)) {
-      console.log('Name already added to chart');
+      console.log("Name already added to chart");
       return;
     }
 
     const filteredResults = parsedData.filter(
-      row => row['Name/Nom'] && row['Name/Nom'].trim() === name.toUpperCase()
+      (row) => row["Name/Nom"] && row["Name/Nom"].trim() === name.toUpperCase()
     );
 
     if (filteredResults.length > 0) {
-      const ctx = document.getElementById('frequencyChart');
+      const ctx = document.getElementById("frequencyChart");
 
       const newData = {
         label: `${name} Frequency`,
-        data: filteredResults.map(result => ({
-          x: new Date(result['Year/Annee']),
-          y: result['Frequency/Frequence'],
+        data: filteredResults.map((result) => ({
+          x: new Date(result["Year/Annee"]),
+          y: result["Frequency/Frequence"],
         })),
         borderColor: getRandomColor(),
         backgroundColor: getRandomColor(),
@@ -57,7 +61,7 @@ function App() {
 
       if (!chart) {
         const newChart = new Chart(ctx, {
-          type: 'line',
+          type: "line",
           data: {
             datasets: [newData],
           },
@@ -65,27 +69,27 @@ function App() {
             responsive: true,
             scales: {
               x: {
-                type: 'time',
+                type: "time",
                 time: {
-                  unit: 'year',
+                  unit: "year",
                 },
                 title: {
                   display: true,
-                  text: 'Year',
+                  text: "Year",
                 },
               },
               y: {
                 title: {
                   display: true,
-                  text: 'Frequency',
+                  text: "Frequency",
                 },
               },
             },
             plugins: {
               tooltip: {
                 callbacks: {
-                  title: () => '',
-                  label: context => {
+                  title: () => "",
+                  label: (context) => {
                     const value = context.parsed.y;
                     const date = new Date(context.parsed.x);
                     const year = date.getFullYear();
@@ -105,17 +109,17 @@ function App() {
         addToSelectedNames(name);
       }
     } else {
-      console.log('Name not found in data');
+      console.log("Name not found in data");
     }
   };
 
-  const addToSelectedNames = name => {
+  const addToSelectedNames = (name) => {
     setSelectedNames([...selectedNames, name]);
   };
 
   const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
+    const letters = "0123456789ABCDEF";
+    let color = "#";
     for (let i = 0; i < 6; i++) {
       color += letters[Math.floor(Math.random() * 16)];
     }
@@ -123,7 +127,9 @@ function App() {
   };
 
   const toggleDataset = () => {
-    setSelectedDataset(prevDataset => (prevDataset === 'male' ? 'female' : 'male'));
+    setSelectedDataset((prevDataset) =>
+      prevDataset === "male" ? "female" : "male"
+    );
     setSelectedNames([]);
     if (chart) {
       chart.destroy();
@@ -132,25 +138,25 @@ function App() {
   };
 
   return (
-    <div>
-      <input
-        type="text"
-        placeholder="Enter a name"
+    <div style={{ margin: "20px" }}>
+      <TextField
+        id="standard-basic"
+        label="Enter a name"
+        variant="standard"
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
       />
-      <button onClick={addToChart}>Add to Chart</button>
+      <Button variant="contained" onClick={addToChart}>
+        Add to Chart
+      </Button>
       <div>
-        <button onClick={toggleDataset}>
-          Toggle Dataset: {selectedDataset === 'male' ? 'Male' : 'Female'}
-        </button>
-        
+        <Switch checked={selectedDataset === "male"} onChange={toggleDataset} />
+        <span>Show {selectedDataset === "male" ? "Male" : "Female"} Data</span>
       </div>
       <div>
-        <p>Selected Names: {selectedNames.join(', ')}</p>
+        <p>Selected Names: {selectedNames.join(", ")}</p>
         <canvas id="frequencyChart" width="400" height="200"></canvas>
       </div>
-      
     </div>
   );
 }
