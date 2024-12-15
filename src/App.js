@@ -5,9 +5,6 @@ import "chartjs-adapter-date-fns";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Typography } from "@mui/material";
-import Radio from "@mui/material/Radio";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -20,7 +17,6 @@ function App() {
   const [parsedData, setParsedData] = useState([]);
   const [chart, setChart] = useState(null);
   const [selectedNames, setSelectedNames] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState("male");
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,9 +39,8 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let dataset =
-          selectedDataset === "male" ? "male_names.csv" : "female_names.csv";
-        const response = await fetch(`Ontario_baby_names/${dataset}`);
+        // const response = await fetch("names.csv");
+        const response = await fetch(`Ontario_baby_names/${"names.csv"}`);
         const csvData = await response.text();
         const parsed = Papa.parse(csvData, { header: true }).data;
         setParsedData(parsed);
@@ -55,7 +50,7 @@ function App() {
     };
 
     fetchData();
-  }, [selectedDataset]);
+  }, []);
 
   const addToChart = () => {
     if (!parsedData || parsedData.length === 0 || !name.trim()) {
@@ -68,7 +63,7 @@ function App() {
     }
 
     const filteredResults = parsedData.filter(
-      (row) => row["Name/Nom"] && row["Name/Nom"].trim() === name.toUpperCase()
+      (row) => row["Name"] && row["Name"].trim() === name.toUpperCase()
     );
 
     if (filteredResults.length > 0) {
@@ -77,8 +72,8 @@ function App() {
       const newData = {
         label: `${name} Frequency`,
         data: filteredResults.map((result) => ({
-          x: new Date(result["Year/Annee"]),
-          y: result["Frequency/Frequence"],
+          x: new Date(result["Year"]),
+          y: result["Frequency"],
         })),
         borderColor: getRandomColor(),
         backgroundColor: getRandomColor(),
@@ -156,26 +151,17 @@ function App() {
     const years = [];
     Object.keys(tableData).forEach((name) => {
       tableData[name].forEach((row) => {
-        years.push(parseInt(row["Year/Annee"]));
+        years.push(parseInt(row["Year"]));
       });
     });
     return Array.from(new Set(years)).sort((a, b) => a - b);
   };
 
   const getFrequencyForYear = (data, year) => {
-    const row = data.find((item) => item["Year/Annee"] === year.toString());
-    return row ? row["Frequency/Frequence"] : "";
+    const row = data.find((item) => item["Year"] === year.toString());
+    return row ? row["Frequency"] : "";
   };
-  const toggleDataset = () => {
-    setSelectedDataset((prevDataset) =>
-      prevDataset === "male" ? "female" : "male"
-    );
-    setSelectedNames([]);
-    if (chart) {
-      chart.destroy();
-      setChart(null);
-    }
-  };
+
   const [tableData, setTableData] = useState({});
 
   const addToTable = (name) => {
@@ -184,7 +170,7 @@ function App() {
     }
 
     const filteredResults = parsedData.filter(
-      (row) => row["Name/Nom"] && row["Name/Nom"].trim() === name.toUpperCase()
+      (row) => row["Name"] && row["Name"].trim() === name.toUpperCase()
     );
 
     if (filteredResults.length > 0) {
@@ -225,56 +211,45 @@ function App() {
       <Button variant="contained" onClick={addToChart}>
         Add to Chart
       </Button>
-      <div>
-        <RadioGroup value={selectedDataset} onChange={toggleDataset}>
-          <FormControlLabel
-            value="male"
-            control={<Radio />}
-            label="Show Male Data"
-          />
-          <FormControlLabel
-            value="female"
-            control={<Radio />}
-            label="Show Female Data"
-          />
-        </RadioGroup>
-      </div>
+
       <div>
         <p>Selected Names: {selectedNames.join(", ")}</p>
         <canvas id="frequencyChart"></canvas>
       </div>
-      <TableContainer component={Paper}>
-        <Table sx={{ width: "max-content" }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Year</TableCell>
-              {Object.keys(tableData).map((name) => (
-                <TableCell key={name} align="right">
-                  {name}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.keys(tableData).length > 0 &&
-              getEarliestAndLatestYears(tableData).map((year) => (
-                <TableRow
-                  key={year}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {year}
+      {Object.keys(tableData).length > 0 && (
+        <TableContainer component={Paper}>
+          <Table sx={{ width: "max-content" }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Year</TableCell>
+                {Object.keys(tableData).map((name) => (
+                  <TableCell key={name} align="right">
+                    {name}
                   </TableCell>
-                  {Object.keys(tableData).map((name) => (
-                    <TableCell key={name} align="right">
-                      {getFrequencyForYear(tableData[name], year)}
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.keys(tableData).length > 0 &&
+                getEarliestAndLatestYears(tableData).map((year) => (
+                  <TableRow
+                    key={year}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {year}
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    {Object.keys(tableData).map((name) => (
+                      <TableCell key={name} align="right">
+                        {getFrequencyForYear(tableData[name], year)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
       <Typography
         variant="body2"
         component="p"
