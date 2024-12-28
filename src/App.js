@@ -119,8 +119,8 @@ function App() {
 
     const fetchDataCanada = async () => {
       try {
-        // const response = await fetch("Ontario_baby_names/canada_names.csv");
-        const response = await fetch("canada_names.csv");
+        const response = await fetch("Ontario_baby_names/canada_names.csv");
+        // const response = await fetch("canada_names.csv");
         const csvData = await response.text();
         const parsed = Papa.parse(csvData, { header: true }).data;
         setParsedDataCanada(parsed);
@@ -134,8 +134,8 @@ function App() {
     const fetchDataUSA = async () => {
       setLoadingUSADatasets(true);
       try {
-        // const response = await fetch("Ontario_baby_names/usa_names.csv");
-        const response = await fetch("usa_names.csv");
+        const response = await fetch("Ontario_baby_names/usa_names.csv");
+        // const response = await fetch("usa_names.csv");
         const csvData = await response.text();
         const parsed = Papa.parse(csvData, { header: true }).data;
         setParsedDataUSA(parsed);
